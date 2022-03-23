@@ -5,12 +5,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider, createGlobalStyle } from "styled-components";
 import defaultTheme from "./theme";
 import { Provider as ReduxProvider } from "react-redux";
-import {
-  ApolloClient,
-  ApolloProvider,
-  InMemoryCache,
-  createHttpLink,
-} from "@apollo/client";
+import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import store from "./redux/store";
 import { createUploadLink } from "apollo-upload-client";
 
@@ -84,11 +79,15 @@ input[type='number']::-webkit-outer-spin-button {
             appearance: none;
 }
 
+.red{
+  color:red
+}
+
 `;
 
 //apollo-client config
 const httpLink = createUploadLink({
-  uri: "https://ordinary-panda-67.loca.lt/graphql",
+  uri: "https://tender-fox-48.loca.lt/graphql",
   credentials: "same-origin",
 }); //파일 업로드일 경우 createHttpLink => apollo-upload-client의 createUploadLink로 바꿀 것.
 
