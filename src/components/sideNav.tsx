@@ -1,8 +1,9 @@
 import styled from "styled-components";
-import { useState } from "react";
+import { useMemo, FC, useRef, MouseEventHandler } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "../redux/rootReducer";
 import { useParams } from "react-router-dom";
+import { menuType } from "../pages/Note";
+import { isJSDocReturnTag } from "typescript";
 const SideBar = styled.aside`
   background-color: #f7f6f3;
   width: 100%;
@@ -24,27 +25,75 @@ const SideBar = styled.aside`
   }
 `;
 const Header = styled.header``;
-//aside안에 section으로 넣자~
-const pages_ = [
-  { name: "Test1", children: [{ name: "nxwested1" }] },
-  {
-    name: "Test2",
-  },
-  { name: "Test3", children: [{ name: "nested3-1" }, { name: "nested3-2" }] },
-];
 
-const SideNav = () => {
-  const [pages, _] = useState(pages_);
+type pageType = {
+  [key: number]: menuType[];
+};
+
+const SideNav: FC<{
+  modalHandler?: Function;
+  pageData: pageType;
+  handleSelectMenu: (pageId: number, parentId: number, index: number) => void;
+}> = ({ modalHandler, pageData, handleSelectMenu }) => {
   const dispatch = useDispatch();
   const opensidebar = useSelector(
     (state: { sideNavOn: boolean }) => state.sideNavOn
   );
   const { username } = useParams();
-  console.log("여기는 사이드네브 : ", username);
-  //   dispatch({ type: "OPENSIDEBAR" });
+
+  const NavElement = ({
+    elements,
+    objectKey: key,
+  }: {
+    elements: menuType[];
+    objectKey?: number;
+  }) => {
+    return (
+      <>
+        {elements.map((data, idx) => {
+          if (pageData.hasOwnProperty(data.pageId)) {
+            return (
+              <div>
+                <div
+                  onClick={(e) => {
+                    console.log("CLICKED", e.currentTarget);
+                    handleSelectMenu(data.pageId, data.parentId, idx);
+                  }}
+                  style={{
+                    paddingLeft: `${data.level * 10}px`,
+                    cursor: "pointer",
+                  }}
+                >
+                  {data.name}
+                </div>
+                {
+                  <NavElement
+                    elements={pageData[data.pageId]}
+                    objectKey={data.pageId}
+                  />
+                }
+              </div>
+            );
+          }
+
+          return (
+            <div
+              onClick={(e) => {
+                console.log("CLICKED", e.currentTarget);
+                handleSelectMenu(data.pageId, data.parentId, idx);
+              }}
+              style={{ paddingLeft: `${data.level * 10}px`, cursor: "pointer" }}
+            >
+              {data.name}
+            </div>
+          );
+        })}
+      </>
+    );
+  };
+
   return (
     <>
-      {opensidebar && <p>hi</p>}
       <SideBar>
         <Header>{username ? username : "anonymous"}'s Notion</Header>
         <input
@@ -52,7 +101,6 @@ const SideNav = () => {
           onChange={(e) => {
             e.preventDefault();
             dispatch({ type: "TOGGLESIDEBAR" });
-            console.log(opensidebar);
           }}
         ></input>
         <ul>
@@ -62,13 +110,20 @@ const SideNav = () => {
             <p>설정과 멤버</p>
           </li>
           <li>
-            {pages.map((page, idx) => {
-              return <p key={idx}>{page.name}</p>;
-            })}
-            {/*이케 li안에 div 컨텐츠 많이 넣는 건 괜춘네 */}
+            <NavElement elements={pageData[0]}></NavElement>
           </li>
         </ul>
-        <p>새 페이지</p>
+        {modalHandler && (
+          <p
+            onClick={(e) => {
+              e.preventDefault();
+              modalHandler();
+            }}
+            style={{ cursor: "pointer" }}
+          >
+            &#43; 새 페이지
+          </p>
+        )}
       </SideBar>
     </>
   );
