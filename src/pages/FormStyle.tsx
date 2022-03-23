@@ -21,10 +21,10 @@ export const FormBox = styled.div`
     display: inline-block;
   }
   & input {
+    box-sizing: border-box;
     width: 100%;
     background-color: #f7f7f4;
     border-color: #e3e3e0;
-    width: 180px;
     padding: 5px 10px;
   }
   & div {
