@@ -12,7 +12,7 @@ const SEND_FILE = gql`
 const InsertImageButton: FC<{ insertImage: Function }> = ({ insertImage }) => {
   const [attachment, setAttachment] = useState();
   const editor = useSlateStatic();
-  const [upload, { data, error }] = useMutation(SEND_FILE, {
+  const [upload] = useMutation(SEND_FILE, {
     onCompleted: (data) => {
       const url = data.uploadImage.url;
       if (url && !isImageUrl(url)) {
