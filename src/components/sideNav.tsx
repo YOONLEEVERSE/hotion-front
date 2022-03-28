@@ -2,8 +2,8 @@ import styled from "styled-components";
 import { useMemo, FC, useRef, MouseEventHandler } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
-import { menuType } from "../pages/Note";
-import { isJSDocReturnTag } from "typescript";
+import { menuType } from "../routes/Note";
+import { useNavigate } from "react-router-dom";
 const SideBar = styled.aside`
   background-color: #f7f6f3;
   width: 100%;
@@ -34,12 +34,14 @@ const SideNav: FC<{
   modalHandler?: Function;
   pageData: pageType;
   handleSelectMenu: (pageId: number, parentId: number, index: number) => void;
+  currentPage: number;
 }> = ({ modalHandler, pageData, handleSelectMenu }) => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const opensidebar = useSelector(
     (state: { sideNavOn: boolean }) => state.sideNavOn
   );
-  const { username } = useParams();
+  const { username, currentPage } = useParams();
 
   const NavElement = ({
     elements,
@@ -50,21 +52,30 @@ const SideNav: FC<{
   }) => {
     return (
       <>
-        {elements.map((data, idx) => {
+        {elements?.map((data, idx) => {
           if (pageData.hasOwnProperty(data.pageId)) {
             return (
               <div>
                 <div
                   onClick={(e) => {
-                    console.log("CLICKED", e.currentTarget);
+                    navigate(`/note/jojo/${data.pageId}`);
+
                     handleSelectMenu(data.pageId, data.parentId, idx);
                   }}
-                  style={{
-                    paddingLeft: `${data.level * 10}px`,
-                    cursor: "pointer",
-                  }}
+                  style={
+                    currentPage && +currentPage === data.pageId
+                      ? {
+                          paddingLeft: `${data.level * 10}px`,
+                          cursor: "pointer",
+                          backgroundColor: "red",
+                        }
+                      : {
+                          paddingLeft: `${data.level * 10}px`,
+                          cursor: "pointer",
+                        }
+                  }
                 >
-                  {data.name}
+                  {data.title}
                 </div>
                 {
                   <NavElement
@@ -79,12 +90,23 @@ const SideNav: FC<{
           return (
             <div
               onClick={(e) => {
-                console.log("CLICKED", e.currentTarget);
                 handleSelectMenu(data.pageId, data.parentId, idx);
+                navigate(`/note/jojo/${data.pageId}`);
               }}
-              style={{ paddingLeft: `${data.level * 10}px`, cursor: "pointer" }}
+              style={
+                currentPage && +currentPage === data.pageId
+                  ? {
+                      paddingLeft: `${data.level * 10}px`,
+                      cursor: "pointer",
+                      backgroundColor: "red",
+                    }
+                  : {
+                      paddingLeft: `${data.level * 10}px`,
+                      cursor: "pointer",
+                    }
+              }
             >
-              {data.name}
+              {data.title}
             </div>
           );
         })}
