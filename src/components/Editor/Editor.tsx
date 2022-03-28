@@ -17,7 +17,16 @@ import {
   Element as SlateElement,
   Editor,
 } from "slate";
-import { useState, useCallback, useMemo, FC, FormEvent } from "react";
+import {
+  useState,
+  useCallback,
+  useMemo,
+  FC,
+  FormEvent,
+  useEffect,
+  useLayoutEffect,
+} from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { withHistory } from "slate-history";
 import {
   BulletedListElement,
@@ -27,8 +36,9 @@ import {
 import isUrl from "is-url";
 import imageExtensions from "image-extensions";
 import React, { LegacyRef, PropsWithChildren } from "react";
-import { gql, useMutation } from "@apollo/client";
+import { empty, gql, useMutation } from "@apollo/client";
 import InsertImageButton from "./InsertImageButton";
+import { RootState } from "../../redux/rootReducer";
 
 interface BaseProps {
   className: string;
@@ -145,7 +155,6 @@ const Element = ({ attributes, children, element }: RenderElementProps) => {
 
 const withShortcuts = (editor: CustomEditorType) => {
   const { deleteBackward, insertText } = editor;
-
   editor.insertText = (text) => {
     const { selection } = editor;
 
@@ -279,13 +288,11 @@ const insertImage = (editor: CustomEditorType, url: string) => {
 const Image = ({
   attributes,
   children,
-  element,
-}: {
-  attributes: RenderElementProps;
-  children: RenderElementProps;
-  element: ImageElementType;
-}) => {
+  element: imageElement,
+}: RenderElementProps) => {
   const editor = useSlateStatic();
+  const element = imageElement as ImageElementType;
+
   const path = ReactEditor.findPath(editor, element);
 
   const selected = useSelected();
@@ -332,11 +339,7 @@ export const isImageUrl = (url: string) => {
   return false;
 };
 
-const ImageElement = (props: {
-  attributes: RenderElementProps;
-  children: RenderElementProps;
-  element: ImageElementType;
-}) => {
+const ImageElement = (props: RenderElementProps) => {
   const { attributes, children, element } = props;
   switch (element.type) {
     case "image":
@@ -347,18 +350,62 @@ const ImageElement = (props: {
 };
 /*Editor */
 
-const CustomEditor: FC = () => {
-  const initialValue: Descendant[] = [
-    { type: "paragraph", children: [{ text: "" }] },
-  ];
+const CustomEditor: FC<{ pageId: number }> = ({ pageId }) => {
+  const pageInfo = useSelector<RootState, { [name: number]: string[] }>(
+    (state) => state.pageInfo
+  );
+  // const initialValue: Descendant[] = [
+  //   { type: "paragraph", children: [{ text: "" }] },
+  // ];
+
+  const initialValue = (): Descendant[] => {
+    if (pageInfo[+pageId].length > 0) {
+      const newData: Descendant[] = [];
+      pageInfo[pageId].forEach((info) => {
+        newData.push(JSON.parse(info));
+      });
+      console.log("newData", newData, typeof newData);
+      return newData;
+    }
+    return [{ type: "paragraph", children: [{ text: "" }] }];
+  };
+
   const [value, setValue] = useState<Descendant[]>(initialValue);
-  const renderElement = useCallback((props) => {
-    if (props.element.type === "image") return <ImageElement {...props} />;
-    return <Element {...props} />;
-  }, []);
-  const editor = useMemo(
-    () => withImages(withShortcuts(withReact(withHistory(createEditor())))),
-    []
+
+  useEffect(() => {
+    console.log("실행됨 포항항");
+    if (pageInfo[+pageId].length > 0) {
+      const newData: Descendant[] = [];
+      pageInfo[pageId].forEach((info) => {
+        newData.push(JSON.parse(info));
+      });
+      editor.children = newData;
+      setValue(newData);
+    }
+  }, [pageId]);
+
+  function resetEditor() {
+    const emptyValue: Descendant[] = [
+      ...value,
+      { type: "paragraph", children: [{ text: "secondLine" }] },
+    ];
+    editor.children = emptyValue;
+    setValue(emptyValue);
+  }
+  const renderElement = useCallback(
+    (props) => {
+      if (props.element.type === "image") return <ImageElement {...props} />;
+      return <Element {...props} />;
+    },
+    [pageId]
+  );
+
+  // const editor = useMemo(
+  //   () => withImages(withShortcuts(withReact(withHistory(createEditor())))),
+  //   [pageId]
+  // );
+  const [editor] = useState(
+    withImages(withShortcuts(withReact(withHistory(createEditor()))))
   );
 
   return (
@@ -369,11 +416,14 @@ const CustomEditor: FC = () => {
         setValue(newValue);
       }}
     >
+      <button onClick={resetEditor}>Clear Text</button>
+
       <InsertImageButton insertImage={insertImage} />
       <Editable
-        renderElement={(e) => renderElement(e)}
-        placeholder="Write smoe markdown..."
-        autoFocus
+        renderElement={(e) => {
+          return renderElement(e);
+        }}
+        placeholder="Write some markdown..."
       />
     </Slate>
   );

@@ -1,18 +1,13 @@
-import { useMutation, gql } from "@apollo/client";
+import { useMutation } from "@apollo/client";
+import { UPLOADIMAGE } from "../../graphql/mutation";
 import { FC, useState } from "react";
 import { useSlateStatic } from "slate-react";
 import { isImageUrl } from "./Editor";
-const SEND_FILE = gql`
-  mutation uploadImage($file: Upload!) {
-    uploadImage(file: $file) {
-      url
-    }
-  }
-`;
+
 const InsertImageButton: FC<{ insertImage: Function }> = ({ insertImage }) => {
   const [attachment, setAttachment] = useState();
   const editor = useSlateStatic();
-  const [upload] = useMutation(SEND_FILE, {
+  const [upload] = useMutation(UPLOADIMAGE, {
     onCompleted: (data) => {
       const url = data.uploadImage.url;
       if (url && !isImageUrl(url)) {

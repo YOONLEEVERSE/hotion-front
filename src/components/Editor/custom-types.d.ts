@@ -57,11 +57,18 @@ export type HeadingSixElement = {
   children: Descendant[];
 };
 
+export type CodeElement = {
+  type: "code";
+  align?: string;
+  chlidren: Descendant[];
+};
+
 export type ImageElement = {
   type: "image";
-  url: string;
-  children: EmptyText[];
+  url?: string;
+  children: Descendant[];
 };
+//type 맞출려면 위애랑 똑같이 해야할듯/..?
 
 export type LinkElement = { type: "link"; url: string; children: Descendant[] };
 
