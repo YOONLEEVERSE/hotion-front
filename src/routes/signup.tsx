@@ -1,6 +1,7 @@
 import { ChangeEvent, FormEvent, useState } from "react";
 import { Button, FormBox, Wrapper } from "./FormStyle";
-import { gql, useMutation } from "@apollo/client";
+import { useMutation } from "@apollo/client";
+import { SIGNUP } from "../graphql/mutation";
 import { useNavigate } from "react-router-dom";
 type AccountType = {
   id: string;
@@ -9,14 +10,6 @@ type AccountType = {
   username: string;
 };
 
-const SIGNUP = gql`
-  mutation signUp($email: String!, $password: String!, $username: String!) {
-    signUp(input: { email: $email, password: $password, username: $username }) {
-      error
-      ok
-    }
-  }
-`;
 function SignUp() {
   const [account, setAccount] = useState<AccountType>({
     id: "",
